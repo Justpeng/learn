@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false" scanPeriod="60000" debug="false">
+    <!--name 制定appender的名称-->
+    <!--class指定 appender的全限定名-->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!--<layout class="ch.qos.logback.classic.PatternLayout">-->
+        <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}[%thread] %-5level %logger - %msg%n</pattern>-->
+        <!--</layout>-->
+
+        <!--推荐使用 encoder  PatternLayoutEncoder-->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}[%thread] %-5level %logger - %msg%n</pattern>
+        </encoder>
+
+        <!--看到尽管<logger>配置的是DEBUG，但是输出的只有warn，因为在<filter>中对匹配到WARN级别时做了ACCEPT（接受），对未匹配到WARN级别时做了DENY（拒绝），当然只能打印出WARN级别的日志。-->
+        <!--<filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+        <!--<level>WARN</level>-->
+        <!--<onMatch>ACCEPT</onMatch>-->
+        <!--<onMismatch>DENY</onMismatch>-->
+        <!--</filter>-->
+
+        <!--因为ThresholdFilter的策略是，会将日志级别小于<level>的全部进行过滤，因此虽然指定了DEBUG级别，但是只有INFO及以上级别的才能被打印出来。-->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <!--写入的文件名，相对或绝对目录，上级目录不存在则自动创建-->
+        <file>/Users/lipeng/data/log/test.log</file>
+        <!--日志追加到结尾-->
+        <append>true</append>
+        <encoder>
+            <pattern>%-4relative [%thread] %5level %logger{35} - %msg%n</pattern>
+        </encoder>
+        <!--<prudent>如果为true表示日志会被安全地写入文件，即使其他的FileAppender也在向此文件做写入操作，效率低，默认为false-->
+        <prudent>false</prudent>
+    </appender>
+
+    <!--指定一些写法-->
+    <appender name="ROLLING-FILE-1" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--<rollingPolicy>的作用是当发生滚动时，定义RollingFileAppender的行为，
+            其中上面的TimeBasedRollingPolicy是最常用的滚动策略，
+            它根据时间指定滚动策略，既负责滚动也负责触发滚动，-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--<fileNamePattern>，必要节点，包含文件名及”%d”转换符，”%d”可以包含一个Java.text.SimpleDateFormat指定的时间格式，如%d{yyyy-MM}，如果直接使用%d那么格式为yyyy-MM-dd。RollingFileAppender的file子节点可有可无，通过设置file可以为活动文件和归档文件指定不同的位置-->
+            <!--<maxHistory>，可选节点，控制保留的归档文件的最大数量，如果超出数量就删除旧文件，假设设置每个月滚动且<maxHistory>是6，则只保存最近6个月的文件-->
+            <fileNamePattern>/Users/lipeng/data/log/rolling-file-history-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%-4relative [%thread] %5level %logger{35} - %msg%n</pattern>
+        </encoder>
+        <!--日志文件最大的大小-->
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>10MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+
+    <!--discardingThreshold，假如等于20则表示，表示当还剩20%容量时，将丢弃TRACE、DEBUG、INFO级别的Event，只保留WARN与ERROR级别的Event，为了保留所有的events，可以将这个值设置为0，默认值为queueSize/5-->
+    <!--queueSize比较好理解，BlockingQueue的最大容量，默认为256-->
+    <!--includeCallerData表示是否提取调用者数据，这个值被设置为true的代价是相当昂贵的，为了提升性能，默认当event被加入BlockingQueue时，event关联的调用者数据不会被提取，只有线程名这些比较简单的数据-->
+    <!--appender-ref表示AsyncAppender使用哪个具体的<appender>进行日志输出-->
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <!--不丢失日志，默认的如果队列的80%已满，则会丢弃TRACE,DEBUG,INFO级别的日志-->
+        <discardingThreadhold>0</discardingThreadhold>
+        <!--更改默认的队列的深度，该值会影响性能，默认值为256-->
+        <queneSize>256</queneSize>
+        <!--添加附加的appender最多添加一个-->
+        <!--AsyncAppender 并不处理日志，仅仅充当得失事件转发器，必须饮用另外一个appender来做事-->
+        <appender-ref ref="ROLLING-FILE-1"/>
+
+    </appender>
+
+
+
+
+    <!--注意这个name表示的是LoggerFactory.getLogger(XXX.class)，XXX的包路径，包路径越少越是父级，
+    我们测试代码里面是Object.class，即name=”java”是name=”java.lang”的父级，
+    root是所有<logger>的父级。
+    logger 中没有配置level，继承父级root的level,
+    logger 中没有配置additivity，那么 additivity=true,表示此 logger 的打印信息向父级root传递
+    looger 中没有配置 appender-ref 表示此logger不会打印出任何信息-->
+    <!--<logger name="java" />-->
+
+
+    <!--我们将<logger>的additivity配置为false，那么控制台应该不会打印出任何日志，因为<logger>的打印信息不会向父级<root>传递且<logger>没有配置任何<appender>-->
+    <!--<logger name="java" additivity="false" />-->
+    <logger name="java" additivity="false" />
+    <!--<logger name="java.lang" level="DEBUG">-->
+    <!--<appender-ref ref="ASYNC"/>-->
+    <!--</logger>-->
+    <logger name="java.lang" level="DEBUG">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <!--LoggerFactory.getLogger(Object.class)，首先找到name=”java.lang”这个<logger>，将日志级别大于等于warn的使用”STDOUT”这个<appender>打印出来-->
+    <!--name=”java.lang”这个<logger>没有配置additivity，那么additivity=true，打印信息向上传递，传递给父级name=”java”这个<logger>-->
+    <!--<logger name="java.lang" level="warn">-->
+    <!--<appender-ref ref="STDOUT"/>-->
+    <!--</logger>-->
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <!--<appender-ref ref="FILE"/>-->
+        <!--<appender-ref ref="ROLLING-FILE-1"/>-->
+    </root>
+</configuration>

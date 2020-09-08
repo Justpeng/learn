@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false" scanPeriod="60000" debug="false">
+
+
+    <springProperty name="LOG_DIR" source="log.dir" scope="context"/>
+    <springProperty name="APP_NAME" source="spring.application.name" scope="context"/>
+    <springProperty name="ROOT_LEVEL" source="log.root.level" scope="context"/>
+    <springProperty name="ROOT_APPENDER_FILTER_LEVEL" source="${log.appender.root.filter.level}" scope="context"/>
+
+    <property name="LOG_PATTERN" value="[%d{&quot;yyyy-MM-dd'T'HH:mm:ss,SSSXXX&quot;}][%level][%thread][%X{MFWT_TRACER_ID}] %logger{20} - %m%n"/>
+    <!--<property name="LOG_FILE" value="${LOG_DIR}/${APP_NAME}/${APP_NAME}.log"/>-->
+    <property name="LOG_FILE" value="/data/test/java-test.log"/>
+    <property name="MAX_HISTORY" value="7"/>
+
+    <!-- root logger -->
+    <appender name="rootAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file></file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <!--<level>${ROOT_APPENDER_FILTER_LEVEL}</level>-->
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <immediateFlush>true</immediateFlush>
+            <charset>UTF8</charset>
+            <!--<charset>${log.appender.root.charset}</charset>-->
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}</fileNamePattern>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="asyncRootAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="rootAppender"/>
+        <queueSize>1024</queueSize>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <!-- 控制台输出 -->
+    <appender name="stdoutAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.alibaba.dubbo" level="ERROR"/>
+    <logger name="org.apache.curator" level="ERROR"/>
+    <logger name="org.springframework" level="ERROR"/>
+    <logger name="org.springframework.test" level="ERROR"/>
+    <logger name="org.apache.zookeeper" level="ERROR"/>
+    <logger name="org.mortbay.log" level="ERROR"/>
+    <logger name="org.apache" level="ERROR"/>
+    <logger name="ch.qos.logback.classic.joran.action.LoggerAction" level="ERROR"/>
+
+    <root>
+        <level value="INFO"/>
+        <appender-ref ref="asyncRootAppender"/>
+        <appender-ref ref="stdoutAppender"/>
+    </root>
+
+</configuration>
