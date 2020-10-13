@@ -1,8 +1,11 @@
 package lagou;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Stack;
 
 public class S01 {
 
@@ -169,12 +172,43 @@ public class S01 {
     }
 
 
+    public static int[] temperatures(int[] T) {
+        int[] result = new int[T.length];
+        Stack<Integer> stack = new Stack<>();
+        for (int i = 0; i < T.length; i++) {
+            //栈不为空且栈里元素小于数组元素
+            while (!stack.isEmpty() && T[i] > T[stack.peek()]) {
+                int pre = stack.pop();
+                result[pre] = i - pre;
+            }
+            stack.add(i);
+        }
+        return result;
+    }
 
+    public static int[] temperatures2(int[] T) {
+        int[] result = new int[T.length];
+        for (int i = 0; i < T.length; i++) {
+            int current = T[i];
+            for (int j = i + 1; j < T.length; j++) {
+                if (T[j] > current) {
+                    result[i] = j-i;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
 
 
     public static void main(String[] args) {
         System.out.println(reverseChar("beijing"));
         // 6226 7302 0092 4287
         System.out.println(isAnagram("beijing","tianjin"));
+
+        int[] T = new int[]{73, 74, 75, 71, 69, 72, 76, 73};
+        System.out.println(JSONObject.toJSON(temperatures(T)));
+        System.out.println(JSONObject.toJSON(temperatures2(T)));
+
     }
 }
