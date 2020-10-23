@@ -1,6 +1,6 @@
 package com.just.learn.basic.algorithem.node;
 
-public class LinkedList {
+public class LinkedListN {
 
     private Node head;
 
@@ -101,7 +101,7 @@ public class LinkedList {
     }
 
     public static void main(String[] args) {
-        LinkedList linkedList = new LinkedList();
+        LinkedListN linkedList = new LinkedListN();
         linkedList.insert(0, 0);
         linkedList.insert(7, 1);
         linkedList.insert(3, 2);
