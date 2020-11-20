@@ -19,6 +19,7 @@
     <module>algorithem</module>
     <module>redis</module>
     <module>zookeeper</module>
+      <module>hystrix</module>
   </modules>
   <packaging>pom</packaging>
 
